@@ -1,0 +1,12 @@
+{
+  "id": "crew",
+  "name": "Crew",
+  "version": "0.1.0",
+  "protocol": 3,
+  "description": "Adds estimated cost and context use to each subagent, and plan progress to the top of the Subagents tab.",
+  "worker": {"command": ["node", "worker.mjs"]},
+  "hooks": ["subagent.update", "plan.update", "tool.call", "turn.end"],
+  "permissions": ["mod.publish"],
+  "slots": ["subagent.meta", "agents.header"],
+  "always_on": true
+}
