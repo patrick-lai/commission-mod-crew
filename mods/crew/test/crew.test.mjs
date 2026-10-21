@@ -41,12 +41,13 @@ test("dollars stay short and honest", () => {
   assert.equal(dollars(250.4), "$250");
 });
 
-test("header shows plan progress, running count and total cost", () => {
+test("header shows plan progress and total cost, and leaves counts to the Subagents tab", () => {
   const state = { plan: [{ content: "Read", status: "completed" }, { content: "Write the parser", status: "in_progress" }], agents: new Map([["a", { status: "in_progress", model: "claude-opus-5-5", usage: { cost_usd: 1 } }], ["b", { status: "completed", model: "mystery", usage: { tokens: 5 } }]]) };
   const [progress, stats] = headerBlocks(state, prices);
   assert.deepEqual(progress, { type: "progress", title: "Plan", label: "Write the parser", value: 0.5 });
-  assert.deepEqual(stats.items, [{ label: "Running", value: "1" }, { label: "Cost", value: "$1.00", hint: "1 of 2 subagents priced" }]);
+  assert.deepEqual(stats.items, [{ label: "Cost", value: "$1.00", hint: "1 of 2 subagents priced" }]);
   assert.deepEqual(headerBlocks({ plan: [], agents: new Map() }, prices), []);
+  assert.deepEqual(headerBlocks({ plan: [], agents: new Map([["c", { status: "in_progress", model: "mystery", usage: { tokens: 5 } }]]) }, prices), []);
 });
 
 test("the worker publishes chips and header once, and only when they change", async () => {
@@ -61,7 +62,7 @@ test("the worker publishes chips and header once, and only when they change", as
   await update(2, { tokens: 100_000, output_tokens: 10_000, context_tokens: 250_000 });
   assert.deepEqual(written.at(-1).publish, [], "nothing changed, nothing published");
   await wire.feed(JSON.stringify({ type: "event", id: 3, hook: "turn.end", thread_id: "t1", workspace_id: "w", data: {} }));
-  assert.equal(written.at(-1).publish[0].blocks[0].items[0].value, "0");
+  assert.deepEqual(written.at(-1).publish, [], "finishing a turn changes no cost");
 });
 
 test("bad events still get a reply", async () => {

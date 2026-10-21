@@ -79,21 +79,19 @@ export function headerBlocks(state, prices) {
     blocks.push({ type: "progress", title: "Plan", label: current ? current.content.slice(0, 120) : done === entries.length ? "All steps done" : "Next step not started", value: done / entries.length });
   }
   const agents = [...state.agents.values()];
-  if (agents.length > 0) {
-    const running = agents.filter((agent) => RUNNING.has(agent.status)).length;
-    let total = 0;
-    let estimated = false;
-    let priced = 0;
-    for (const agent of agents) {
-      const cost = costOf(agent.usage, priceFor(agent.model, prices));
-      if (cost === null) continue;
-      total += cost.usd;
-      priced += 1;
-      estimated ||= cost.estimated;
-    }
-    const items = [{ label: "Running", value: String(running) }];
-    if (priced > 0) items.push({ label: "Cost", value: dollars(total), hint: priced < agents.length ? `${priced} of ${agents.length} subagents priced` : estimated ? "Estimated" : undefined });
-    blocks.push({ type: "stats", items: items.map((item) => (item.hint === undefined ? { label: item.label, value: item.value } : item)) });
+  let total = 0;
+  let estimated = false;
+  let priced = 0;
+  for (const agent of agents) {
+    const cost = costOf(agent.usage, priceFor(agent.model, prices));
+    if (cost === null) continue;
+    total += cost.usd;
+    priced += 1;
+    estimated ||= cost.estimated;
+  }
+  if (priced > 0) {
+    const hint = priced < agents.length ? `${priced} of ${agents.length} subagents priced` : estimated ? "Estimated" : undefined;
+    blocks.push({ type: "stats", items: [hint === undefined ? { label: "Cost", value: dollars(total) } : { label: "Cost", value: dollars(total), hint }] });
   }
   return blocks;
 }
